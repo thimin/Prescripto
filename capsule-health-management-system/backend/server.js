@@ -22,6 +22,14 @@ app.use("/api/user", userRouter)
 app.use("/api/admin", adminRouter)
 app.use("/api/doctor", doctorRouter)
 
+// backend/server.js (after routes)
+app.use((err, _req, res, _next) => {
+  // Multer and other errors land here instead of crashing the process
+  const msg = err?.message || "Server error";
+  return res.status(400).json({ success: false, message: msg });
+});
+
+
 app.get("/", (req, res) => {
   res.send("API Working")
 });
