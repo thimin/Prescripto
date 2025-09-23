@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
-
+import handleError from "../middleware/errorHandler.js";
 // API for doctor Login 
 const loginDoctor = async (req, res) => {
 
@@ -27,7 +27,7 @@ const loginDoctor = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to login. Please try again later.")
     }
 }
 
@@ -42,7 +42,7 @@ const appointmentsDoctor = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch appointments. Please try again later.")
     }
 }
 
@@ -62,7 +62,7 @@ const appointmentCancel = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to cancel appointment. Please try again later.")
     }
 
 }
@@ -83,7 +83,7 @@ const appointmentComplete = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to complete appointment. Please try again later.")
     }
 
 }
@@ -97,7 +97,7 @@ const doctorList = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch doctors. Please try again later.")
     }
 
 }
@@ -114,7 +114,7 @@ const changeAvailablity = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to change availablity. Please try again later.")
     }
 }
 
@@ -129,7 +129,7 @@ const doctorProfile = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch profile. Please try again later.")
     }
 }
 
@@ -145,7 +145,7 @@ const updateDoctorProfile = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to update profile. Please try again later.")
     }
 }
 
@@ -186,7 +186,7 @@ const doctorDashboard = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch dashboard data. Please try again later.")
     }
 }
 

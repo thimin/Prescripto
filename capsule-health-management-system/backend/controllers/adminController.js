@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
+import handleError from "../middleware/errorHandler.js";
+
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -21,7 +23,7 @@ const loginAdmin = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to login. Please try again later.")
     }
 
 }
@@ -36,7 +38,7 @@ const appointmentsAdmin = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch appointments. Please try again later.")
     }
 
 }
@@ -52,7 +54,7 @@ const appointmentCancel = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to cancel appointment. Please try again later.")
     }
 
 }
@@ -108,7 +110,7 @@ const addDoctor = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to add doctor. Please try again later.")
     }
 }
 
@@ -121,7 +123,7 @@ const allDoctors = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch doctors. Please try again later.") 
     }
 }
 
@@ -144,7 +146,7 @@ const adminDashboard = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        handleError(error, res, "Unable to fetch dashboard data. Please try again later.")
     }
 }
 

@@ -371,6 +371,7 @@ import validator from "validator";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import handleError from "../middleware/errorHandler.js";
 import { v2 as cloudinary } from 'cloudinary';
 import stripe from "stripe";
 import razorpay from 'razorpay';
@@ -381,16 +382,7 @@ const razorpayInstance = new razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// helper to send safe error response
-const handleError = (error, res, customMsg) => {
-    console.error(error); // log real error for developers
-    // Detect duplicate key errors (like email already exists)
-    if (error.code === 11000) {
-        return res.json({ success: false, message: "Duplicate entry. Please use a different value." });
-    }
-    // use custom message if provided, else generic
-    res.json({ success: false, message: customMsg || "An unexpected error occurred. Please try again later." });
-};
+
 
 // API to register user
 const registerUser = async (req, res) => {
