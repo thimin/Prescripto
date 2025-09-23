@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -8,8 +9,9 @@ const userSchema = new mongoose.Schema({
     address: { type: Object, default: { line1: '', line2: '' } },
     gender: { type: String, default: 'Not Selected' },
     dob: { type: String, default: 'Not Selected' },
-    password: { type: String, required: true },
-    treatmentPlan: { type: String, default: '' }
+    password: { type: String, required: false },
+    treatmentPlan: { type: String, default: '' },
+    googleId: { type: String }
 })
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
