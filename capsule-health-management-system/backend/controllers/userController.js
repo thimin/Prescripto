@@ -387,27 +387,61 @@ const razorpayInstance = new razorpay({
 // API to register user
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) {
-            return res.json({ success: false, message: 'Missing Details' });
-        }
-        if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: "Please enter a valid email" });
-        }
-        if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" });
+        let { name, email, password } = req.body;
+
+        //Explicit type validation
+        if (
+            typeof name !== "string" ||
+            typeof email !== "string" ||
+            typeof password !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid input types. Name, email, and password must be strings.",
+            });
         }
 
+        //Trim inputs to avoid hidden whitespace
+        name = name.trim();
+        email = email.trim();
+        password = password.trim();
+
+        //Presence check
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: "Missing Details" });
+        }
+
+        //Email validation
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid email" });
+        }
+
+        //Password validation
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Please enter a strong password" });
+        }
+
+        //Hash password safely
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const userData = { name, email, password: hashedPassword };
-        const newUser = new userModel(userData);
-        const user = await newUser.save();
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        //Save user
+        const newUser = new userModel({
+            name,
+            email,
+            password: hashedPassword,
+        });
 
-        res.json({ success: true, token });
+        const user = await newUser.save();
+
+        //Generate token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "7d", // optional: limit token lifetime
+        });
+
+        return res.json({ success: true, token });
     } catch (error) {
+        console.error(error);
         handleError(error, res, "Unable to register user.");
     }
 };
@@ -431,11 +465,24 @@ const loginUser = async (req, res) => {
     }
 };
 
+// Google Authentication Callback
+const googleAuthCallback = async (req, res) => {
+    try {
+        const user = req.user;
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        res.redirect(`${process.env.FRONTEND_URL}/auth-success?token=${token}`);
+    } catch (error) {
+        console.log(error);
+        res.redirect(`${process.env.FRONTEND_URL}/login?error=true`);
+    }
+}
+
+// API to get user profile data
 const getProfile = async (req, res) => {
     try {
-        const { userId } = req.body;
-        const userData = await userModel.findById(userId).select('-password');
-        res.json({ success: true, userData });
+        const { userId } = req.body
+        const userData = await userModel.findById(userId).select('-password')
+        res.json({ success: true, userData })
     } catch (error) {
         handleError(error, res, "Failed to fetch profile.");
     }
@@ -448,7 +495,6 @@ const updateProfile = async (req, res) => {
         if (!name || !phone || !dob || !gender) {
             return res.json({ success: false, message: "Data Missing" });
         }
-
         await userModel.findByIdAndUpdate(userId, {
             name,
             phone,
@@ -457,12 +503,11 @@ const updateProfile = async (req, res) => {
             gender,
             treatmentPlan,
         });
-
         if (imageFile) {
             const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
-            await userModel.findByIdAndUpdate(userId, { image: imageUpload.secure_url });
+            const imageURL = imageUpload.secure_url;
+            await userModel.findByIdAndUpdate(userId, { image: imageURL });
         }
-
         res.json({ success: true, message: 'Profile Updated' });
     } catch (error) {
         handleError(error, res, "Failed to update profile.");
@@ -505,12 +550,13 @@ const bookAppointment = async (req, res) => {
     } catch (error) {
         handleError(error, res, "Failed to book appointment.");
     }
-};
+}
 
+// API to cancel appointment
 const cancelAppointment = async (req, res) => {
     try {
-        const { userId, appointmentId } = req.body;
-        const appointmentData = await appointmentModel.findById(appointmentId);
+        const { userId, appointmentId } = req.body
+        const appointmentData = await appointmentModel.findById(appointmentId)
         if (appointmentData.userId !== userId) {
             return res.json({ success: false, message: 'Unauthorized action' });
         }
@@ -545,7 +591,7 @@ const paymentRazorpay = async (req, res) => {
         if (!appointmentData || appointmentData.cancelled) {
             return res.json({ success: false, message: 'Appointment Cancelled or not found' });
         }
-
+      
         const options = {
             amount: appointmentData.amount * 100,
             currency: process.env.CURRENCY,
@@ -621,6 +667,7 @@ const verifyStripe = async (req, res) => {
 export {
     loginUser,
     registerUser,
+    googleAuthCallback,
     getProfile,
     updateProfile,
     bookAppointment,
