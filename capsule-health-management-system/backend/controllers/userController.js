@@ -18,32 +18,65 @@ const razorpayInstance = new razorpay({
 // API to register user
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        let { name, email, password } = req.body;
+
+        //Explicit type validation
+        if (
+            typeof name !== "string" ||
+            typeof email !== "string" ||
+            typeof password !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid input types. Name, email, and password must be strings.",
+            });
+        }
+
+        //Trim inputs to avoid hidden whitespace
+        name = name.trim();
+        email = email.trim();
+        password = password.trim();
+
+        //Presence check
         if (!name || !email || !password) {
-            return res.json({ success: false, message: 'Missing Details' })
+            return res.status(400).json({ success: false, message: "Missing Details" });
         }
+
+        //Email validation
         if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: "Please enter a valid email" })
+            return res.status(400).json({ success: false, message: "Please enter a valid email" });
         }
+
+        //Password validation
         if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" })
+            return res.status(400).json({ success: false, message: "Please enter a strong password" });
         }
+
+        //Hash password safely
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt)
-        const userData = {
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        //Save user
+        const newUser = new userModel({
             name,
             email,
             password: hashedPassword,
-        }
-        const newUser = new userModel(userData)
-        const user = await newUser.save()
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-        res.json({ success: true, token })
+        });
+
+        const user = await newUser.save();
+
+        //Generate token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "7d", // optional: limit token lifetime
+        });
+
+        return res.json({ success: true, token });
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Server error" });
     }
-}
+};
+
 
 // API to login user
 const loginUser = async (req, res) => {
